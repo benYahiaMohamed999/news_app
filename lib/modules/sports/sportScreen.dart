@@ -25,7 +25,7 @@ class SportsScreen extends StatelessWidget {
             physics: const BouncingScrollPhysics(),
           ),
           condition: list.length > 0,
-          fallback: (context) => Center(
+          fallback: (context) => const Center(
             child: CircularProgressIndicator(),
           ),
         );

@@ -3,11 +3,10 @@ import 'package:app_1/models/newsModel.dart';
 import 'package:app_1/modules/business/businessScreen.dart';
 import 'package:app_1/modules/science/scienceScreen.dart';
 import 'package:app_1/modules/sports/sportScreen.dart';
-import 'package:bloc/bloc.dart';
+import 'package:app_1/shared/local/cache_Helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../modules/settings/settingsScreen.dart';
 import '../../shared/local/remote/dio_helper.dart';
 
 class NewsCubit extends Cubit<NewsState> {
@@ -16,7 +15,7 @@ class NewsCubit extends Cubit<NewsState> {
   static NewsCubit get(context) => BlocProvider.of(context);
 
   int currentIndex = 0;
-  List<BottomNavigationBarItem> BottomItem = [
+  List<BottomNavigationBarItem> bottomItem = [
     const BottomNavigationBarItem(
         icon: Icon(
           Icons.business,
@@ -120,5 +119,44 @@ class NewsCubit extends Cubit<NewsState> {
     } else {
       emit(NewsGetScienceSuccessState());
     }
+  }
+
+  bool isDark = true;
+  initializeTheme({required bool theme}) {
+    isDark = theme;
+  }
+
+  Future<void> changeAppMode() async {
+    isDark = !isDark;
+    print(isDark);
+    CacheHelper.putData(
+      key: 'isDark',
+      value: isDark,
+    ).then((value) {
+      emit(AppChangeDarkModeState());
+    });
+  }
+
+  List<dynamic> search = [];
+  void getSearch(String value) {
+    emit(NewsGetSearchLoadingState());
+    search = [];
+
+    DioHelper.getData(
+      url: 'v2/everything',
+      query: {
+        'q': '$value',
+        'apiKey': 'f7e6e96229574cf78cff4dde0ae82412',
+      },
+    ).then((value) {
+      search = value.data['articles'];
+      print(search[0]['title']);
+      emit(NewsGetSearchSuccessState());
+    }).catchError((error) {
+      print(error.toString());
+      emit(NewsGetSearchErrorState((error.toString())));
+    });
+
+    emit(NewsGetSearchSuccessState());
   }
 }
